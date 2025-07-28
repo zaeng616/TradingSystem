@@ -8,9 +8,21 @@ public:
 		return "No driver selected!";
 	}
 };
-class InsufficientSharesException : public std::exception {
+
+class UnknownCodeException : public std::exception
+{
+public:
+	char const* what() const override
+	{
+		return "Invalid StockCode selected!";
+	}
+};
+
+class InsufficientSharesException : public std::exception
+{
 	char const* what() const override
 	{
 		return "You don't have enough shares!";
 	}
 };
+

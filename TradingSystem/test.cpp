@@ -18,7 +18,7 @@ class MockDriver : public Driver {
 public:
 	MOCK_METHOD(bool, login, (std::string ID, std::string pass), (override));
 	MOCK_METHOD(int, getPrice, (std::string code), (override));
-	MOCK_METHOD(void, buy, (std::string stockPrice, int count, int price), (override));
+	MOCK_METHOD(void, buy, (std::string code, int count, int price), (override));
 	MOCK_METHOD(void, sell, (std::string code, int price, int quantity), (override));
 	MOCK_METHOD(int, getAvailableCash, (), (override));
 	MOCK_METHOD(void, depositCash, (int cash), (override));
@@ -27,6 +27,7 @@ public:
 
 class StockBrockerDriverInterface {
 public:
+	std::string UNKNOWN_STOCK_CODE = "Unknown";
 	void selectStockBrocker(Driver& driver) {
 		this->driver = &driver;
 	}
@@ -38,13 +39,16 @@ public:
 		return driver->login(ID, pass);
 	}
 	int getPrice(std::string code) {
+		CheckStockCode(code);
 		return driver->getPrice(code);
 	}
-	bool buy(std::string stockPrice, int count, int price) {
-		driver->buy(stockPrice, count, price);
+	bool buy(std::string code, int count, int price) {
+		CheckStockCode(code);
+		driver->buy(code, count, price);
 		return true;
 	}
 	bool sell(std::string code, int price, int quantity) {
+		CheckStockCode(code);
 		if (quantity > getAvailableShares(code)) {
 			throw InsufficientSharesException();
 			return false;
@@ -63,29 +67,27 @@ public:
 	}
 private:
 	Driver* driver = nullptr;
+
+	void CheckStockCode(std::string& code)
+	{
+		if (code == UNKNOWN_STOCK_CODE) {
+			throw UnknownCodeException();
+		}
+	}
 };
+
 
 class TradingFixture :public testing::Test {
 public:
 	MockDriver mock;
 	StockBrockerDriverInterface stockerBrocker;
 	std::string id = "id1234";
-	std::string UNKNOWN = "Unknown";
+	std::string UNKNOWN = stockerBrocker.UNKNOWN_STOCK_CODE;
 	std::string password = "password56";
 	std::string code = "987654";
 	int price = 10000;
 	int quantity = 100;
 };
-
-TEST_F(TradingFixture, TestNotSelectDriver) {
-	EXPECT_CALL(mock, login(id, password))
-		.WillRepeatedly(Return(true));
-	try {
-		stockerBrocker.login(id, password);
-		FAIL();
-	}
-	catch (UnknownDriverException& e) {}
-}
 
 TEST_F(TradingFixture, TestMockLogin) {
 	EXPECT_CALL(mock, login(id, password))
@@ -111,7 +113,6 @@ TEST_F(TradingFixture, TestMockGetPrice) {
 	int ret = stockerBrocker.getPrice(code);
 	EXPECT_EQ(ret, price);
 }
-/*
 TEST_F(TradingFixture, TestMockUnknownStockCode1) {
 	stockerBrocker.selectStockBrocker(mock);
 	stockerBrocker.login(id, password);
@@ -121,7 +122,6 @@ TEST_F(TradingFixture, TestMockUnknownStockCode1) {
 	}
 	catch (UnknownCodeException& e) {}
 }
-
 TEST_F(TradingFixture, TestMockUnknownStockCode2) {
 	stockerBrocker.selectStockBrocker(mock);
 	stockerBrocker.login(id, password);
@@ -141,7 +141,6 @@ TEST_F(TradingFixture, TestMockUnknownStockCode3) {
 	}
 	catch (UnknownCodeException& e) {}
 }
-*/
 TEST_F(TradingFixture, TestMockDepositCash) {
 	int cash = 100000;
 	EXPECT_CALL(mock, getAvailableCash())
@@ -154,6 +153,7 @@ TEST_F(TradingFixture, TestMockDepositCash) {
 	stockerBrocker.depositCash(cash);
 	EXPECT_EQ(stockerBrocker.getAvailableCash(), cash);
 }
+
 
 TEST_F(TradingFixture, TestMockBuy) {
 	EXPECT_CALL(mock, buy(code, price, quantity)).Times(1);
