@@ -7,9 +7,11 @@
 class AutoTradingSystem {
 public:
 	std::string UNKNOWN_STOCK_CODE = "Unknown";
+
 	void selectStockBrocker(DriverInterface& driver) {
 		this->driver = &driver;
 	}
+
 	bool login(std::string ID, std::string pass) {
 		if (driver == nullptr) {
 			throw UnknownDriverException();
@@ -17,10 +19,12 @@ public:
 
 		return driver->login(ID, pass);
 	}
+
 	int getPrice(std::string code) {
 		CheckStockCode(code);
 		return driver->getPrice(code);
 	}
+
 	bool buy(std::string code, int price, int quantity) {
 		CheckStockCode(code);
 		if (driver->getAvailableCash() < price) {
@@ -30,24 +34,28 @@ public:
 		driver->buy(code, price, quantity);
 		return true;
 	}
+
 	bool sell(std::string code, int price, int quantity) {
 		CheckStockCode(code);
 		if (quantity > getAvailableShares(code)) {
 			throw InsufficientSharesException();
-			return false;
 		}
 		driver->sell(code, price, quantity);
 		return true;
 	}
+
 	int getAvailableCash() {
 		return driver->getAvailableCash();
 	}
+
 	void depositCash(int cash) {
 		driver->depositCash(cash);
 	}
+
 	int getAvailableShares(std::string code) {
 		return driver->getAvailableShares(code);
 	}
+
 	bool buyNiceTiming(std::string code, int totalPrice) {
 		int price1 = getPrice(code);
 
@@ -61,6 +69,7 @@ public:
 
 		return buy(code, price3, totalPrice / price3);
 	}
+
 	bool sellNiceTiming(std::string code, int quantity) {
 		int price1 = getPrice(code);
 
@@ -77,11 +86,10 @@ public:
 private:
 	DriverInterface* driver = nullptr;
 
-	void CheckStockCode(std::string& code)
+	void CheckStockCode(const std::string& code)
 	{
 		if (code == UNKNOWN_STOCK_CODE) {
 			throw UnknownCodeException();
 		}
 	}
 };
-
