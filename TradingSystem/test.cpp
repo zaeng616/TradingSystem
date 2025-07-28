@@ -129,7 +129,7 @@ TEST_F(TradingFixture, TestMockGetPrice) {
 }
 TEST_F(TradingFixture, TestMockUnknownStockCode1) {
 	stockerBrocker.selectStockBrocker(mock);
-	stockerBrocker.login(id, password);
+	//stockerBrocker.login(id, password);
 	try {
 		stockerBrocker.getPrice(UNKNOWN);
 		FAIL();
@@ -138,7 +138,7 @@ TEST_F(TradingFixture, TestMockUnknownStockCode1) {
 }
 TEST_F(TradingFixture, TestMockUnknownStockCode2) {
 	stockerBrocker.selectStockBrocker(mock);
-	stockerBrocker.login(id, password);
+	//stockerBrocker.login(id, password);
 	try {
 		stockerBrocker.buy(UNKNOWN, price, quantity);
 		FAIL();
@@ -148,7 +148,7 @@ TEST_F(TradingFixture, TestMockUnknownStockCode2) {
 
 TEST_F(TradingFixture, TestMockUnknownStockCode3) {
 	stockerBrocker.selectStockBrocker(mock);
-	stockerBrocker.login(id, password);
+	//stockerBrocker.login(id, password);
 	try {
 		stockerBrocker.sell(UNKNOWN, price, quantity);
 		FAIL();
