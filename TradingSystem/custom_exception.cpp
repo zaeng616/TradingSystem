@@ -1,3 +1,4 @@
+#pragma once
 #include <stdexcept>
 
 class UnknownDriverException : public std::exception
