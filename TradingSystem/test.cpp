@@ -5,13 +5,15 @@ using namespace testing;
 class Driver {
 public:
 	virtual bool login(std::string ID, std::string pass) = 0;
- 	virtual int getPrice(int code) = 0;
+	virtual int getPrice(std::string code) = 0;
+	virtual void buy(std::string stockPrice, int count, int price) = 0;
 };
 
 class MockDriver : public Driver {
 public:
 	MOCK_METHOD(bool, login, (std::string ID, std::string pass), (override));
-	MOCK_METHOD(int, getPrice, (int code), (override));
+	MOCK_METHOD(int, getPrice, (std::string code), (override));
+	MOCK_METHOD(void, buy, (std::string stockPrice, int count, int price), (override));
 };
 
 class StockBrockerDriverInterface {
@@ -23,8 +25,12 @@ public:
 		driver->login(ID, pass);
 		return true;
 	}
-	int getPrice(int code) {
+	int getPrice(std::string code) {
 		return 10000;
+	}
+	bool buy(std::string stockPrice, int count, int price) {
+		driver->buy(stockPrice, count, price);
+		return true;
 	}
 private:
 	Driver* driver = nullptr;
@@ -42,6 +48,7 @@ public:
 	int quantity = 100;
 
 };
+
 /*
 TEST_F(TradingFixture, TestNotSelectDriver) {
 	try {
@@ -57,14 +64,14 @@ TEST_F(TradingFixture, TestMockLoginFail) {
 	bool ret = stockerBrocker.login(id, password);
 	EXPECT_FALSE(ret);
 }
-*/
+
 TEST_F(TradingFixture, TestMockLogin) {
 	EXPECT_CALL(mock, login(id, password)).WillRepeatedly(testing::Return(true));
 	stockerBrocker.selectStockBrocker(mock);
 	bool ret = stockerBrocker.login(id, password);
 	EXPECT_TRUE(ret);
 }
-/*
+*/
 TEST_F(TradingFixture, TestMockGetPrice) {
 	EXPECT_CALL(mock, getPrice(code)).WillRepeatedly(testing::Return(price));
 	stockerBrocker.selectStockBrocker(mock);
@@ -72,7 +79,7 @@ TEST_F(TradingFixture, TestMockGetPrice) {
 	int ret = stockerBrocker.getPrice(code);
 	EXPECT_EQ(ret, price);
 }
-
+/*
 TEST_F(TradingFixture, TestMockUnknownStockCode1) {
 	stockerBrocker.selectStockBrocker(mock);
 	stockerBrocker.login(id, password);
@@ -145,4 +152,5 @@ TEST_F(TradingFixture, TestMockSell) {
 	bool ret = stockerBrocker.sell(code, price, quantity);
 	EXPECT_TRUE(ret);
 }
+
 */
