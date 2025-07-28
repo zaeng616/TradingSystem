@@ -1,5 +1,6 @@
 #include "gmock/gmock.h"
 #include "custom_exception.cpp"
+#include <windows.h>
 
 using namespace testing;
 
@@ -69,6 +70,20 @@ public:
 	int getAvailableShares(std::string code) {
 		return driver->getAvailableShares(code);
 	}
+	bool buyNiceTiming(std::string code, int totalPrice) {
+		int price1 = getPrice(code);
+
+		Sleep(200);
+		int price2 = getPrice(code);
+
+		Sleep(200);
+		int price3 = getPrice(code);
+
+		if (price2 <= price1 || price3 <= price2) return false;
+
+		return buy(code, price3, totalPrice / price3);
+	}
+
 private:
 	Driver* driver = nullptr;
 
@@ -128,7 +143,7 @@ TEST_F(TradingFixture, TestMockGetPrice) {
 
 TEST_F(TradingFixture, TestMockUnknownStockCode1) {
 	stockerBrocker.selectStockBrocker(mock);
-	stockerBrocker.login(id, password);
+	//stockerBrocker.login(id, password);
 	try {
 		stockerBrocker.getPrice(UNKNOWN);
 		FAIL();
@@ -137,7 +152,7 @@ TEST_F(TradingFixture, TestMockUnknownStockCode1) {
 }
 TEST_F(TradingFixture, TestMockUnknownStockCode2) {
 	stockerBrocker.selectStockBrocker(mock);
-	stockerBrocker.login(id, password);
+	//stockerBrocker.login(id, password);
 	try {
 		stockerBrocker.buy(UNKNOWN, price, quantity);
 		FAIL();
@@ -147,7 +162,7 @@ TEST_F(TradingFixture, TestMockUnknownStockCode2) {
 
 TEST_F(TradingFixture, TestMockUnknownStockCode3) {
 	stockerBrocker.selectStockBrocker(mock);
-	stockerBrocker.login(id, password);
+	//stockerBrocker.login(id, password);
 	try {
 		stockerBrocker.sell(UNKNOWN, price, quantity);
 		FAIL();
@@ -172,7 +187,7 @@ TEST_F(TradingFixture, TestMockBuyFail) {
 	EXPECT_CALL(mock, getAvailableCash())
 		.WillOnce(testing::Return(0));
 	stockerBrocker.selectStockBrocker(mock);
-	stockerBrocker.login(id, password);
+	//stockerBrocker.login(id, password);
 	try {
 		stockerBrocker.buy(code, price, quantity);
 		FAIL();
@@ -186,7 +201,7 @@ TEST_F(TradingFixture, TestMockBuySuccess) {
 		.WillRepeatedly(testing::Return(cash));
 	EXPECT_CALL(mock, buy(code, price, quantity)).Times(1);
 	stockerBrocker.selectStockBrocker(mock);
-	stockerBrocker.login(id, password);
+	//stockerBrocker.login(id, password);
 	stockerBrocker.buy(code, price, quantity);
 }
 
@@ -213,4 +228,32 @@ TEST_F(TradingFixture, TestMockSellSuccess) {
 	stockerBrocker.sell(code, price, quantity);
 	int ret = stockerBrocker.getAvailableShares(code);
 	EXPECT_EQ(ret, 100);
+}
+
+TEST_F(TradingFixture, TestBuyNiceTiming) {
+	int cash = 1000000;
+	EXPECT_CALL(mock, getAvailableCash())
+		.WillRepeatedly(testing::Return(cash));
+	EXPECT_CALL(mock, getPrice(code))
+		.WillOnce(testing::Return(9000))
+		.WillOnce(testing::Return(9500))
+		.WillOnce(testing::Return(10000));
+	EXPECT_CALL(mock, buy(code, 10000, 100)).Times(1);
+	stockerBrocker.selectStockBrocker(mock);
+	//stockerBrocker.login(id, password);
+	stockerBrocker.buyNiceTiming(code, cash);
+}
+
+TEST_F(TradingFixture, TestBuyNiceTiming2) {
+	int cash = 1000000;
+	EXPECT_CALL(mock, getAvailableCash())
+		.WillRepeatedly(testing::Return(cash));
+	EXPECT_CALL(mock, getPrice(code))
+		.WillOnce(testing::Return(10000))
+		.WillOnce(testing::Return(9500))
+		.WillOnce(testing::Return(9000));
+	EXPECT_CALL(mock, buy(code, 10000, 100)).Times(0);
+	stockerBrocker.selectStockBrocker(mock);
+	//stockerBrocker.login(id, password);
+	stockerBrocker.buyNiceTiming(code, cash);
 }
