@@ -9,6 +9,15 @@ public:
 	}
 };
 
+class UnknownCodeException : public std::exception
+{
+public:
+	char const* what() const override
+	{
+		return "Invalid StockCode selected!";
+	}
+};
+
 class InsufficientBalanceException : public std::exception
 {
 public:
