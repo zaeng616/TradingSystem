@@ -8,3 +8,12 @@ public:
 		return "No driver selected!";
 	}
 };
+
+class InsufficientBalanceException : public std::exception
+{
+public:
+	char const* what() const override
+	{
+		return "Insufficient Balance!";
+	}
+};
