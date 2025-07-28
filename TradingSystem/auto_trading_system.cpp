@@ -4,15 +4,17 @@
 #include "custom_exception.cpp"
 #include "windows.h"
 
+using std::string;
+
 class AutoTradingSystem {
 public:
-	std::string UNKNOWN_STOCK_CODE = "Unknown";
+	string UNKNOWN_STOCK_CODE = "Unknown";
 
 	void selectStockBrocker(DriverInterface& driver) {
 		this->driver = &driver;
 	}
 
-	bool login(std::string ID, std::string pass) {
+	bool login(const string& ID, const string& pass) {
 		if (driver == nullptr) {
 			throw UnknownDriverException();
 		}
@@ -20,12 +22,12 @@ public:
 		return driver->login(ID, pass);
 	}
 
-	int getPrice(std::string code) {
+	int getPrice(const string& code) {
 		CheckStockCode(code);
 		return driver->getPrice(code);
 	}
 
-	bool buy(std::string code, int price, int quantity) {
+	bool buy(const string& code, int price, int quantity) {
 		CheckStockCode(code);
 		if (driver->getAvailableCash() < price) {
 			throw InsufficientBalanceException();
@@ -35,7 +37,7 @@ public:
 		return true;
 	}
 
-	bool sell(std::string code, int price, int quantity) {
+	bool sell(const string& code, int price, int quantity) {
 		CheckStockCode(code);
 		if (quantity > getAvailableShares(code)) {
 			throw InsufficientSharesException();
@@ -52,11 +54,11 @@ public:
 		driver->depositCash(cash);
 	}
 
-	int getAvailableShares(std::string code) {
+	int getAvailableShares(const string& code) {
 		return driver->getAvailableShares(code);
 	}
 
-	bool buyNiceTiming(std::string code, int totalPrice) {
+	bool buyNiceTiming(string code, int totalPrice) {
 		int price1 = getPrice(code);
 
 		Sleep(200);
@@ -70,7 +72,7 @@ public:
 		return buy(code, price3, totalPrice / price3);
 	}
 
-	bool sellNiceTiming(std::string code, int quantity) {
+	bool sellNiceTiming(const string& code, int quantity) {
 		int price1 = getPrice(code);
 
 		Sleep(200);
@@ -86,7 +88,7 @@ public:
 private:
 	DriverInterface* driver = nullptr;
 
-	void CheckStockCode(const std::string& code)
+	void CheckStockCode(const string& code)
 	{
 		if (code == UNKNOWN_STOCK_CODE) {
 			throw UnknownCodeException();
