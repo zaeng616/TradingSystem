@@ -73,6 +73,19 @@ TEST_F(TradingFixture, TestMockUnknownStockCode3) {
 	catch (UnknownCodeException& e) {}
 }
 
+TEST_F(TradingFixture, TestMockDepositCash) {
+	int cash = 100000;
+	EXPECT_CALL(mock, getAvailableCash())
+		.WillOnce(testing::Return(0))
+		.WillOnce(testing::Return(cash));
+	EXPECT_CALL(mock, depositCash(cash)).Times(1);
+	stockerBrocker.selectStockBrocker(mock);
+	EXPECT_TRUE(stockerBrocker.login(id, password));
+	EXPECT_EQ(stockerBrocker.getAvailableCash(), 0);
+	stockerBrocker.depositCash(cash);
+	EXPECT_EQ(stockerBrocker.getAvailableCash(), cash);
+}
+
 TEST_F(TradingFixture, TestMockBuy) {
 	EXPECT_CALL(mock, buy(code, price, quantity)).Times(1);
 	stockerBrocker.selectStockBrocker(mock);
