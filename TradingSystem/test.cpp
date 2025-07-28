@@ -34,7 +34,7 @@ public:
 	}
 	bool sell(std::string code, int price, int quantity) {
 		driver->sell(code, price, quantity);
-		return true;;
+		return true;
 	}
 private:
 	Driver* driver = nullptr;
