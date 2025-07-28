@@ -1,5 +1,6 @@
 ﻿#include "gmock/gmock.h"
 #include "custom_exception.cpp"
+#include <windows.h>
 
 using namespace testing;
 
@@ -41,6 +42,20 @@ public:
 	bool sell(std::string code, int price, int quantity) {
 		driver->sell(code, price, quantity);
 		return true;
+	}
+	bool buyNiceTiming(std::string code, int totalPrice) {
+		int price = driver->getPrice(code);
+
+		// repeat 2 more times
+		for (int i = 0; i < 2; i++) {
+			Sleep(200);
+			int newPrice = driver->getPrice(code);
+			if (newPrice <= price) return false;
+
+			price = newPrice;
+		}
+
+		return buy(code, totalPrice / price, price);
 	}
 private:
 	Driver* driver = nullptr;
@@ -109,4 +124,32 @@ TEST_F(TradingFixture, TestMockSell) {
 	EXPECT_TRUE(stockerBrocker.login(id, password));
 	bool ret = stockerBrocker.sell(code, price, quantity);
 	EXPECT_TRUE(ret);
+}
+
+TEST_F(TradingFixture, TestBuyNiceTiming) {
+	int cash = 1000000;
+	EXPECT_CALL(mock, getAvailableCash())
+		.WillRepeatedly(testing::Return(cash));
+	EXPECT_CALL(mock, getPrice(code))
+		.WillOnce(testing::Return(9000))
+		.WillOnce(testing::Return(9500))
+		.WillOnce(testing::Return(10000));
+	EXPECT_CALL(mock, buy(code, 10000, 100)).Times(1);
+	stockerBrocker.selectStockBrocker(mock);
+	stockerBrocker.login(id, password);
+	stockerBrocker.buyNiceTiming(code, cash);
+}
+
+TEST_F(TradingFixture, TestBuyNiceTiming2) {
+	int cash = 1000000;
+	EXPECT_CALL(mock, getAvailableCash())
+		.WillRepeatedly(testing::Return(cash));
+	EXPECT_CALL(mock, getPrice(code))
+		.WillOnce(testing::Return(10000))
+		.WillOnce(testing::Return(9500))
+		.WillOnce(testing::Return(9000));
+	EXPECT_CALL(mock, buy(code, 10000, 100)).Times(0);
+	stockerBrocker.selectStockBrocker(mock);
+	stockerBrocker.login(id, password);
+	stockerBrocker.buyNiceTiming(code, cash);
 }
