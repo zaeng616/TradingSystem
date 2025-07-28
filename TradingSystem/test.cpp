@@ -5,7 +5,7 @@ public:
 	MockDriver mock;
 	StockerBrockerDriverInterface stockerBrocker;
 	std::string id = "id1234";
-	std::string unknownId = "Unknown";
+	std::string UNKNOWN = "Unknown";
 	std::string password = "password56";
 	std::string code = "987654";
 	int price = 10000;
@@ -22,7 +22,7 @@ TEST_F(TradingFixture, TestNotSelectDriver) {
 }
 
 TEST_F(TradingFixture, TestMockLoginFail) {
-	EXPECT_CALL(mock, login(unknownId, password)).WillRepeatedly(testing::Return(false));
+	EXPECT_CALL(mock, login(UNKNOWN, password)).WillRepeatedly(testing::Return(false));
 	stockerBrocker.selectStockBrocker(mock);
 	bool ret = stockerBrocker.login(id, password);
 	EXPECT_FALSE(ret);
@@ -41,6 +41,36 @@ TEST_F(TradingFixture, TestMockGetPrice) {
 	EXPECT_TRUE(stockerBrocker.login(id, password));
 	int ret = stockerBrocker.getPrice(code);
 	EXPECT_EQ(ret, price);
+}
+
+TEST_F(TradingFixture, TestMockUnknownStockCode1) {
+	stockerBrocker.selectStockBrocker(mock);
+	stockerBrocker.login(id, password);
+	try {
+		stockerBrocker.getPrice(UNKNOWN);
+		FAIL();
+	}
+	catch (UnknownCodeException& e) {}
+}
+
+TEST_F(TradingFixture, TestMockUnknownStockCode2) {
+	stockerBrocker.selectStockBrocker(mock);
+	stockerBrocker.login(id, password);
+	try {
+		stockerBrocker.buy(UNKNOWN, price, quantity);
+		FAIL();
+	}
+	catch (UnknownCodeException& e) {}
+}
+
+TEST_F(TradingFixture, TestMockUnknownStockCode3) {
+	stockerBrocker.selectStockBrocker(mock);
+	stockerBrocker.login(id, password);
+	try {
+		stockerBrocker.sell(UNKNOWN, price, quantity);
+		FAIL();
+	}
+	catch (UnknownCodeException& e) {}
 }
 
 TEST_F(TradingFixture, TestMockBuy) {
