@@ -9,6 +9,8 @@ using namespace testing;
 class TradingFixture :public Test {
 public:
 	MockDriver mock;
+	KiwerDriver kiwer;
+	NemoDriver nemo;
 	AutoTradingSystem stockBrocker;
 	std::string id = "id1234";
 	std::string UNKNOWN = stockBrocker.UNKNOWN_STOCK_CODE;
@@ -33,6 +35,14 @@ TEST_F(TradingFixture, TestMockLoginFail) {
 	stockBrocker.selectStockBrocker(mock);
 	bool ret = stockBrocker.login(UNKNOWN, password);
 	EXPECT_FALSE(ret);
+
+	stockBrocker.selectStockBrocker(kiwer);
+	ret = stockBrocker.login(UNKNOWN, password);
+	EXPECT_FALSE(ret);
+
+	stockBrocker.selectStockBrocker(nemo);
+	ret = stockBrocker.login(UNKNOWN, password);
+	EXPECT_FALSE(ret);
 }
 
 TEST_F(TradingFixture, TestMockLogin) {
@@ -42,6 +52,14 @@ TEST_F(TradingFixture, TestMockLogin) {
 
 	stockBrocker.selectStockBrocker(mock);
 	bool ret = stockBrocker.login(id, password);
+	EXPECT_TRUE(ret);
+
+	stockBrocker.selectStockBrocker(kiwer);
+	ret = stockBrocker.login(id, password);
+	EXPECT_TRUE(ret);
+
+	stockBrocker.selectStockBrocker(nemo);
+	ret = stockBrocker.login(id, password);
 	EXPECT_TRUE(ret);
 }
 
