@@ -6,7 +6,7 @@ public:
 	StockerBrockerDriverInterface stockerBrocker;
 	std::string id = "id1234";
 	std::string password = "password56";
-	int code = 987654;
+	std::string code = "987654";
 	int price = 10000;
 	int quantity = 100;
 
