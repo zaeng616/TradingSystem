@@ -83,7 +83,19 @@ public:
 
 		return buy(code, price3, totalPrice / price3);
 	}
+	bool sellNiceTiming(std::string code, int quantity) {
+		int price1 = getPrice(code);
 
+		Sleep(200);
+		int price2 = getPrice(code);
+
+		Sleep(200);
+		int price3 = getPrice(code);
+
+		if (price1 <= price2 || price2 <= price3) return false;
+
+		return sell(code, price3, quantity);
+	}
 private:
 	Driver* driver = nullptr;
 
@@ -256,4 +268,30 @@ TEST_F(TradingFixture, TestBuyNiceTiming2) {
 	stockerBrocker.selectStockBrocker(mock);
 	//stockerBrocker.login(id, password);
 	stockerBrocker.buyNiceTiming(code, cash);
+}
+
+TEST_F(TradingFixture, TestSellNiceTiming) {
+	EXPECT_CALL(mock, getAvailableShares)
+		.WillRepeatedly(testing::Return(100));
+	EXPECT_CALL(mock, getPrice(code))
+		.WillOnce(testing::Return(10000))
+		.WillOnce(testing::Return(9500))
+		.WillOnce(testing::Return(9000));
+	EXPECT_CALL(mock, sell(code, 9000, 100)).Times(1);
+	stockerBrocker.selectStockBrocker(mock);
+	//stockerBrocker.login(id, password);
+	stockerBrocker.sellNiceTiming(code, 100);
+}
+
+TEST_F(TradingFixture, TestSellNiceTiming2) {
+	EXPECT_CALL(mock, getAvailableShares)
+		.WillRepeatedly(testing::Return(100));
+	EXPECT_CALL(mock, getPrice(code))
+		.WillOnce(testing::Return(9000))
+		.WillOnce(testing::Return(9500))
+		.WillOnce(testing::Return(10000));
+	EXPECT_CALL(mock, sell).Times(0);
+	stockerBrocker.selectStockBrocker(mock);
+	//stockerBrocker.login(id, password);
+	stockerBrocker.sellNiceTiming(code, 100);
 }
