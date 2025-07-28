@@ -41,6 +41,7 @@ public:
 	MockDriver mock;
 	StockerBrockerDriverInterface stockerBrocker;
 	std::string id = "id1234";
+	std::string unknownId = "Unknown";
 	std::string password = "password56";
 	std::string code = "987654";
 	int price = 10000;
@@ -56,8 +57,15 @@ TEST_F(TradingFixture, TestNotSelectDriver) {
 	catch (UnknownDriverException& e) {}
 }
 
+TEST_F(TradingFixture, TestMockLoginFail) {
+	EXPECT_CALL(mock, login(unknownId, password)).WillRepeatedly(testing::Return(false));
+	stockerBrocker.selectStockBrocker(mock);
+	bool ret = stockerBrocker.login(id, password);
+	EXPECT_FALSE(ret);
+}
+
 TEST_F(TradingFixture, TestMockLogin) {
-	EXPECT_CALL(mock, login(id, password)).Times(1);
+	EXPECT_CALL(mock, login(id, password)).WillRepeatedly(testing::Return(true));
 	stockerBrocker.selectStockBrocker(mock);
 	bool ret = stockerBrocker.login(id, password);
 	EXPECT_TRUE(ret);
