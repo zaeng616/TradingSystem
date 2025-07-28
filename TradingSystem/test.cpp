@@ -60,7 +60,7 @@ TEST_F(TradingFixture, TestNotSelectDriver) {
 		stockerBrocker.login(id, password);
 		FAIL();
 	}
-	catch (UnknownDriverException& e) {}
+	catch (const UnknownDriverException& e) {}
 }
 
 TEST_F(TradingFixture, TestMockLoginFail) {
