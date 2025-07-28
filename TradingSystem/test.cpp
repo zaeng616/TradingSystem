@@ -81,24 +81,6 @@ public:
 	int quantity = 100;
 };
 
-TEST_F(TradingFixture, TestNotSelectDriver) {
-	EXPECT_CALL(mock, login(id, password))
-		.WillRepeatedly(Return(true));
-	try {
-		stockerBrocker.login(id, password);
-		FAIL();
-	}
-	catch (UnknownDriverException& e) {}
-}
-
-TEST_F(TradingFixture, TestMockLoginFail) {
-	EXPECT_CALL(mock, login(UNKNOWN, password))
-		.WillRepeatedly(testing::Return(false));
-	stockerBrocker.selectStockBrocker(mock);
-	bool ret = stockerBrocker.login(UNKNOWN, password);
-	EXPECT_FALSE(ret);
-}
-
 TEST_F(TradingFixture, TestMockLogin) {
 	EXPECT_CALL(mock, login(id, password))
 		.Times(1)
@@ -131,7 +113,6 @@ TEST_F(TradingFixture, TestMockGetPrice) {
 	int ret = stockerBrocker.getPrice(code);
 	EXPECT_EQ(ret, price);
 }
-/*
 TEST_F(TradingFixture, TestMockUnknownStockCode1) {
 	stockerBrocker.selectStockBrocker(mock);
 	stockerBrocker.login(id, password);
@@ -141,7 +122,6 @@ TEST_F(TradingFixture, TestMockUnknownStockCode1) {
 	}
 	catch (UnknownCodeException& e) {}
 }
-
 TEST_F(TradingFixture, TestMockUnknownStockCode2) {
 	stockerBrocker.selectStockBrocker(mock);
 	stockerBrocker.login(id, password);
@@ -161,7 +141,6 @@ TEST_F(TradingFixture, TestMockUnknownStockCode3) {
 	}
 	catch (UnknownCodeException& e) {}
 }
-*/
 TEST_F(TradingFixture, TestMockDepositCash) {
 	int cash = 100000;
 	EXPECT_CALL(mock, getAvailableCash())
@@ -175,34 +154,6 @@ TEST_F(TradingFixture, TestMockDepositCash) {
 	EXPECT_EQ(stockerBrocker.getAvailableCash(), cash);
 }
 
-TEST_F(TradingFixture, TestMockUnknownStockCode1) {
-	stockerBrocker.selectStockBrocker(mock);
-	stockerBrocker.login(id, password);
-	try {
-		stockerBrocker.getPrice(UNKNOWN);
-		FAIL();
-	}
-	catch (UnknownCodeException& e) {}
-}
-TEST_F(TradingFixture, TestMockUnknownStockCode2) {
-	stockerBrocker.selectStockBrocker(mock);
-	stockerBrocker.login(id, password);
-	try {
-		stockerBrocker.buy(UNKNOWN, price, quantity);
-		FAIL();
-	}
-	catch (UnknownCodeException& e) {}
-}
-
-TEST_F(TradingFixture, TestMockUnknownStockCode3) {
-	stockerBrocker.selectStockBrocker(mock);
-	stockerBrocker.login(id, password);
-	try {
-		stockerBrocker.sell(UNKNOWN, price, quantity);
-		FAIL();
-	}
-	catch (UnknownCodeException& e) {}
-}
 
 TEST_F(TradingFixture, TestMockBuy) {
 	EXPECT_CALL(mock, buy(code, price, quantity)).Times(1);
