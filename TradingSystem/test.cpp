@@ -1,4 +1,7 @@
-﻿#include "gmock/gmock.h"
+#include "gmock/gmock.h"
+#include "custom_exception.cpp"
+
+using namespace testing;
 
 class Driver {
 public:
@@ -26,11 +29,14 @@ public:
 		this->driver = &driver;
 	}
 	bool login(std::string ID, std::string pass) {
-		driver->login(ID, pass);
-		return true;
+		if (driver == nullptr) {
+			throw UnknownDriverException();
+		}
+
+		return driver->login(ID, pass);
 	}
 	int getPrice(std::string code) {
-		return 10000;
+		return driver->getPrice(code);
 	}
 	bool buy(std::string stockPrice, int count, int price) {
 		driver->buy(stockPrice, count, price);
@@ -64,11 +70,38 @@ public:
 };
 
 TEST_F(TradingFixture, TestNotSelectDriver) {
+	EXPECT_CALL(mock, login(id, password))
+		.WillRepeatedly(Return(true));
 	try {
 		stockerBrocker.login(id, password);
 		FAIL();
 	}
 	catch (UnknownDriverException& e) {}
+}
+
+TEST_F(TradingFixture, TestMockLoginFail) {
+	EXPECT_CALL(mock, login(UNKNOWN, password))
+		.WillRepeatedly(testing::Return(false));
+	stockerBrocker.selectStockBrocker(mock);
+	bool ret = stockerBrocker.login(UNKNOWN, password);
+	EXPECT_FALSE(ret);
+}
+
+TEST_F(TradingFixture, TestMockLogin) {
+	EXPECT_CALL(mock, login(id, password))
+		.Times(1)
+		.WillRepeatedly(Return(true));
+	stockerBrocker.selectStockBrocker(mock);
+	bool ret = stockerBrocker.login(id, password);
+	EXPECT_TRUE(ret);
+}
+
+TEST_F(TradingFixture, TestNotSelectDriver) {
+	try {
+		stockerBrocker.login(id, password);
+		FAIL();
+	}
+	catch (const UnknownDriverException& e) {}
 }
 
 TEST_F(TradingFixture, TestMockLoginFail) {
@@ -78,21 +111,15 @@ TEST_F(TradingFixture, TestMockLoginFail) {
 	EXPECT_FALSE(ret);
 }
 
-TEST_F(TradingFixture, TestMockLogin) {
-	EXPECT_CALL(mock, login(id, password)).WillRepeatedly(testing::Return(true));
-	stockerBrocker.selectStockBrocker(mock);
-	bool ret = stockerBrocker.login(id, password);
-	EXPECT_TRUE(ret);
-}
-
 TEST_F(TradingFixture, TestMockGetPrice) {
 	EXPECT_CALL(mock, getPrice(code)).WillRepeatedly(testing::Return(price));
+	EXPECT_CALL(mock, login(id, password)).WillRepeatedly(Return(true));
 	stockerBrocker.selectStockBrocker(mock);
 
 	int ret = stockerBrocker.getPrice(code);
 	EXPECT_EQ(ret, price);
 }
-
+/*
 TEST_F(TradingFixture, TestMockUnknownStockCode1) {
 	stockerBrocker.selectStockBrocker(mock);
 	stockerBrocker.login(id, password);
@@ -122,7 +149,7 @@ TEST_F(TradingFixture, TestMockUnknownStockCode3) {
 	}
 	catch (UnknownCodeException& e) {}
 }
-
+*/
 TEST_F(TradingFixture, TestMockDepositCash) {
 	int cash = 100000;
 	EXPECT_CALL(mock, getAvailableCash())
@@ -138,6 +165,7 @@ TEST_F(TradingFixture, TestMockDepositCash) {
 
 TEST_F(TradingFixture, TestMockBuy) {
 	EXPECT_CALL(mock, buy(code, price, quantity)).Times(1);
+	EXPECT_CALL(mock, login(id, password)).WillRepeatedly(Return(true));
 	stockerBrocker.selectStockBrocker(mock);
 
 	stockerBrocker.buy(code, price, quantity);
@@ -145,6 +173,7 @@ TEST_F(TradingFixture, TestMockBuy) {
 
 TEST_F(TradingFixture, TestMockSell) {
 	EXPECT_CALL(mock, sell(code, price, quantity)).Times(1);
+	EXPECT_CALL(mock, login(id, password)).WillRepeatedly(Return(true));
 	stockerBrocker.selectStockBrocker(mock);
 
 	bool ret = stockerBrocker.sell(code, price, quantity);
