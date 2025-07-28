@@ -62,7 +62,7 @@ TEST_F(TradingFixture, TestMockLogin) {
 	bool ret = stockerBrocker.login(id, password);
 	EXPECT_TRUE(ret);
 }
-# if 0
+
 TEST_F(TradingFixture, TestMockGetPrice) {
 	EXPECT_CALL(mock, getPrice(code)).WillRepeatedly(testing::Return(price));
 	stockerBrocker.selectStockBrocker(mock);
@@ -77,7 +77,7 @@ TEST_F(TradingFixture, TestMockBuy) {
 	EXPECT_TRUE(stockerBrocker.login(id, password));
 	stockerBrocker.buy(code, price, quantity);
 }
-#endif
+
 TEST_F(TradingFixture, TestMockSell) {
 	EXPECT_CALL(mock, sell(code, price, quantity)).Times(1);
 	stockerBrocker.selectStockBrocker(mock);
