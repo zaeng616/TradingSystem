@@ -5,8 +5,30 @@ using namespace testing;
 class Driver {
 public:
 	virtual void login(std::string ID, std::string pass) = 0;
-	virtual int getPrice(int code) = 0;
+ 	virtual int getPrice(int code) = 0;
 };
+
+class MockDriver : public Driver {
+public:
+	MOCK_METHOD(void, login, (std::string ID, std::string pass), (override));
+};
+
+class StockerBrockerDriverInterface {
+public:
+	void selectStockBrocker(Driver& driver) {
+		this->driver = &driver;
+	}
+	bool login(std::string ID, std::string pass) {
+		driver->login(ID, pass);
+		return true;
+	}
+private:
+	Driver* driver = nullptr;
+};
+
+TEST(TradingSystemTest, AlwaysTrueTC) {
+	EXPECT_EQ(1, 1);
+}
 
 class MockDriver : public Driver {
 public:
