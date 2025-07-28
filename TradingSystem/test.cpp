@@ -15,12 +15,13 @@ class MockDriver : public Driver {
 public:
 	MOCK_METHOD(bool, login, (std::string ID, std::string pass), (override));
 	MOCK_METHOD(int, getPrice, (std::string code), (override));
-	MOCK_METHOD(void, buy, (std::string stockPrice, int count, int price), (override));
+	MOCK_METHOD(void, buy, (std::string code, int count, int price), (override));
 	MOCK_METHOD(void, sell, (std::string code, int price, int quantity), (override));
 };
 
 class StockBrockerDriverInterface {
 public:
+	std::string UNKNOWN_STOCK_CODE = "Unknown";
 	void selectStockBrocker(Driver& driver) {
 		this->driver = &driver;
 	}
@@ -32,19 +33,30 @@ public:
 		return driver->login(ID, pass);
 	}
 	int getPrice(std::string code) {
+		CheckStockCode(code);
 		return driver->getPrice(code);
 	}
-	bool buy(std::string stockPrice, int count, int price) {
-		driver->buy(stockPrice, count, price);
+	bool buy(std::string code, int count, int price) {
+		CheckStockCode(code);
+		driver->buy(code, count, price);
 		return true;
 	}
 	bool sell(std::string code, int price, int quantity) {
+		CheckStockCode(code);
 		driver->sell(code, price, quantity);
 		return true;
 	}
 private:
 	Driver* driver = nullptr;
+
+	void CheckStockCode(std::string& code)
+	{
+		if (code == UNKNOWN_STOCK_CODE) {
+			throw UnknownCodeException();
+		}
+	}
 };
+
 
 class TradingFixture :public testing::Test {
 public:
@@ -52,7 +64,7 @@ public:
 	StockBrockerDriverInterface stockerBrocker;
 
 	std::string id = "id1234";
-	std::string UNKNOWN = "Unknown";
+	std::string UNKNOWN = stockerBrocker.UNKNOWN_STOCK_CODE;
 	std::string password = "password56";
 	std::string code = "987654";
 
@@ -95,7 +107,6 @@ TEST_F(TradingFixture, TestMockGetPrice) {
 }
 
 TEST_F(TradingFixture, TestMockUnknownStockCode1) {
-	EXPECT_CALL(mock, getPrice(UNKNOWN)).WillRepeatedly(testing::Throw(UnknownCodeException()));
 	stockerBrocker.selectStockBrocker(mock);
 	stockerBrocker.login(id, password);
 	try {
@@ -105,7 +116,6 @@ TEST_F(TradingFixture, TestMockUnknownStockCode1) {
 	catch (UnknownCodeException& e) {}
 }
 TEST_F(TradingFixture, TestMockUnknownStockCode2) {
-	EXPECT_CALL(mock, buy(UNKNOWN, testing::_, testing::_)).WillRepeatedly(testing::Throw(UnknownCodeException()));
 	stockerBrocker.selectStockBrocker(mock);
 	stockerBrocker.login(id, password);
 	try {
@@ -116,7 +126,6 @@ TEST_F(TradingFixture, TestMockUnknownStockCode2) {
 }
 
 TEST_F(TradingFixture, TestMockUnknownStockCode3) {
-	EXPECT_CALL(mock, sell(UNKNOWN, testing::_, testing::_)).WillRepeatedly(testing::Throw(UnknownCodeException()));
 	stockerBrocker.selectStockBrocker(mock);
 	stockerBrocker.login(id, password);
 	try {
