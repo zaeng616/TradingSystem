@@ -7,7 +7,7 @@ class Driver {
 public:
 	virtual bool login(std::string ID, std::string pass) = 0;
 	virtual int getPrice(std::string code) = 0;
-	virtual void buy(std::string stockPrice, int count, int price) = 0;
+	virtual void buy(std::string code, int count, int price) = 0;
 	virtual void sell(std::string code, int price, int quantity) = 0;
 	virtual int getAvailableCash() = 0;
 	virtual void depositCash(int cash) = 0;
@@ -42,6 +42,10 @@ public:
 	}
 	bool buy(std::string code, int count, int price) {
 		CheckStockCode(code);
+		if (driver->getAvailableCash() < price) {
+			throw InsufficientBalanceException();
+		}
+
 		driver->buy(code, count, price);
 		return true;
 	}
@@ -81,15 +85,6 @@ public:
 	int quantity = 100;
 };
 
-TEST_F(TradingFixture, TestMockLogin) {
-	EXPECT_CALL(mock, login(id, password))
-		.Times(1)
-		.WillRepeatedly(Return(true));
-	stockerBrocker.selectStockBrocker(mock);
-	bool ret = stockerBrocker.login(id, password);
-	EXPECT_TRUE(ret);
-}
-
 TEST_F(TradingFixture, TestNotSelectDriver) {
 	try {
 		stockerBrocker.login(id, password);
@@ -105,6 +100,15 @@ TEST_F(TradingFixture, TestMockLoginFail) {
 	EXPECT_FALSE(ret);
 }
 
+TEST_F(TradingFixture, TestMockLogin) {
+	EXPECT_CALL(mock, login(id, password))
+		.Times(1)
+		.WillRepeatedly(Return(true));
+	stockerBrocker.selectStockBrocker(mock);
+	bool ret = stockerBrocker.login(id, password);
+	EXPECT_TRUE(ret);
+}
+
 TEST_F(TradingFixture, TestMockGetPrice) {
 	EXPECT_CALL(mock, getPrice(code)).WillRepeatedly(testing::Return(price));
 	EXPECT_CALL(mock, login(id, password)).WillRepeatedly(Return(true));
@@ -113,6 +117,7 @@ TEST_F(TradingFixture, TestMockGetPrice) {
 	int ret = stockerBrocker.getPrice(code);
 	EXPECT_EQ(ret, price);
 }
+
 TEST_F(TradingFixture, TestMockUnknownStockCode1) {
 	stockerBrocker.selectStockBrocker(mock);
 	stockerBrocker.login(id, password);
@@ -141,6 +146,7 @@ TEST_F(TradingFixture, TestMockUnknownStockCode3) {
 	}
 	catch (UnknownCodeException& e) {}
 }
+
 TEST_F(TradingFixture, TestMockDepositCash) {
 	int cash = 100000;
 	EXPECT_CALL(mock, getAvailableCash())
@@ -154,12 +160,25 @@ TEST_F(TradingFixture, TestMockDepositCash) {
 	EXPECT_EQ(stockerBrocker.getAvailableCash(), cash);
 }
 
-
-TEST_F(TradingFixture, TestMockBuy) {
-	EXPECT_CALL(mock, buy(code, price, quantity)).Times(1);
-	EXPECT_CALL(mock, login(id, password)).WillRepeatedly(Return(true));
+TEST_F(TradingFixture, TestMockBuyFail) {
+	EXPECT_CALL(mock, getAvailableCash())
+		.WillOnce(testing::Return(0));
 	stockerBrocker.selectStockBrocker(mock);
+	stockerBrocker.login(id, password);
+	try {
+		stockerBrocker.buy(code, price, quantity);
+		FAIL();
+	}
+	catch (InsufficientBalanceException& e) {}
+}
 
+TEST_F(TradingFixture, TestMockBuySuccess) {
+	int cash = 1000000;
+	EXPECT_CALL(mock, getAvailableCash())
+		.WillRepeatedly(testing::Return(cash));
+	EXPECT_CALL(mock, buy(code, price, quantity)).Times(1);
+	stockerBrocker.selectStockBrocker(mock);
+	stockerBrocker.login(id, password);
 	stockerBrocker.buy(code, price, quantity);
 }
 
