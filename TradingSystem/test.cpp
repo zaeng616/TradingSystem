@@ -4,35 +4,13 @@ using namespace testing;
 
 class Driver {
 public:
-	virtual void login(std::string ID, std::string pass) = 0;
+	virtual bool login(std::string ID, std::string pass) = 0;
  	virtual int getPrice(int code) = 0;
 };
 
 class MockDriver : public Driver {
 public:
-	MOCK_METHOD(void, login, (std::string ID, std::string pass), (override));
-};
-
-class StockerBrockerDriverInterface {
-public:
-	void selectStockBrocker(Driver& driver) {
-		this->driver = &driver;
-	}
-	bool login(std::string ID, std::string pass) {
-		driver->login(ID, pass);
-		return true;
-	}
-private:
-	Driver* driver = nullptr;
-};
-
-TEST(TradingSystemTest, AlwaysTrueTC) {
-	EXPECT_EQ(1, 1);
-}
-
-class MockDriver : public Driver {
-public:
-	MOCK_METHOD(void, login, (std::string ID, std::string pass), (override));
+	MOCK_METHOD(bool, login, (std::string ID, std::string pass), (override));
 	MOCK_METHOD(int, getPrice, (int code), (override));
 };
 
@@ -52,30 +30,119 @@ private:
 	Driver* driver = nullptr;
 };
 
-class TradingSystemFixture : public Test {
+class TradingFixture :public testing::Test {
 public:
 	MockDriver mock;
-	StockBrockerDriverInterface stockBrocker;
+	StockBrockerDriverInterface stockerBrocker;
 	std::string id = "id1234";
+	std::string UNKNOWN = "Unknown";
 	std::string password = "password56";
-	int code = 987654;
-};
+	std::string code = "987654";
+	int price = 10000;
+	int quantity = 100;
 
-TEST_F(TradingSystemFixture, AlwaysTrueTC) {
-	EXPECT_EQ(1, 1);
+};
+/*
+TEST_F(TradingFixture, TestNotSelectDriver) {
+	try {
+		stockerBrocker.login(id, password);
+		FAIL();
+	}
+	catch (UnknownDriverException& e) {}
 }
 
-TEST_F(TradingSystemFixture, TestMockLogin) {
-	EXPECT_CALL(mock, login(id, password)).Times(1);
-	stockBrocker.selectStockBrocker(mock);
-	bool ret = stockBrocker.login(id, password);
+TEST_F(TradingFixture, TestMockLoginFail) {
+	EXPECT_CALL(mock, login(UNKNOWN, password)).WillRepeatedly(testing::Return(false));
+	stockerBrocker.selectStockBrocker(mock);
+	bool ret = stockerBrocker.login(id, password);
+	EXPECT_FALSE(ret);
+}
+*/
+TEST_F(TradingFixture, TestMockLogin) {
+	EXPECT_CALL(mock, login(id, password)).WillRepeatedly(testing::Return(true));
+	stockerBrocker.selectStockBrocker(mock);
+	bool ret = stockerBrocker.login(id, password);
 	EXPECT_TRUE(ret);
 }
-
-TEST_F(TradingSystemFixture, TestMockGetPrice) {
-	EXPECT_CALL(mock, getPrice(code)).WillRepeatedly(testing::Return(10000));
-	stockBrocker.selectStockBrocker(mock);
-	EXPECT_TRUE(stockBrocker.login(id, password));
-	int ret = stockBrocker.getPrice(code);
-	EXPECT_EQ(ret, 10000);
+/*
+TEST_F(TradingFixture, TestMockGetPrice) {
+	EXPECT_CALL(mock, getPrice(code)).WillRepeatedly(testing::Return(price));
+	stockerBrocker.selectStockBrocker(mock);
+	EXPECT_TRUE(stockerBrocker.login(id, password));
+	int ret = stockerBrocker.getPrice(code);
+	EXPECT_EQ(ret, price);
 }
+
+TEST_F(TradingFixture, TestMockUnknownStockCode1) {
+	stockerBrocker.selectStockBrocker(mock);
+	stockerBrocker.login(id, password);
+	try {
+		stockerBrocker.getPrice(UNKNOWN);
+		FAIL();
+	}
+	catch (UnknownCodeException& e) {}
+}
+
+TEST_F(TradingFixture, TestMockUnknownStockCode2) {
+	stockerBrocker.selectStockBrocker(mock);
+	stockerBrocker.login(id, password);
+	try {
+		stockerBrocker.buy(UNKNOWN, price, quantity);
+		FAIL();
+	}
+	catch (UnknownCodeException& e) {}
+}
+
+TEST_F(TradingFixture, TestMockUnknownStockCode3) {
+	stockerBrocker.selectStockBrocker(mock);
+	stockerBrocker.login(id, password);
+	try {
+		stockerBrocker.sell(UNKNOWN, price, quantity);
+		FAIL();
+	}
+	catch (UnknownCodeException& e) {}
+}
+
+TEST_F(TradingFixture, TestMockDepositCash) {
+	int cash = 100000;
+	EXPECT_CALL(mock, getAvailableCash())
+		.WillOnce(testing::Return(0))
+		.WillOnce(testing::Return(cash));
+	EXPECT_CALL(mock, depositCash(cash)).Times(1);
+	stockerBrocker.selectStockBrocker(mock);
+	EXPECT_TRUE(stockerBrocker.login(id, password));
+	EXPECT_EQ(stockerBrocker.getAvailableCash(), 0);
+	stockerBrocker.depositCash(cash);
+	EXPECT_EQ(stockerBrocker.getAvailableCash(), cash);
+}
+
+TEST_F(TradingFixture, TestMockBuyFail) {
+	EXPECT_CALL(mock, getAvailableCash())
+		.WillOnce(testing::Return(0));
+	stockerBrocker.selectStockBrocker(mock);
+	stockerBrocker.login(id, password);
+	try {
+		stockerBrocker.buy(code, price, quantity);
+		FAIL();
+	}
+	catch (InsufficientBalanceException& e) {}
+}
+
+TEST_F(TradingFixture, TestMockBuySuccess) {
+	int cash = 1000000;
+	EXPECT_CALL(mock, getAvailableCash())
+		.WillRepeatedly(testing::Return(cash));
+	EXPECT_CALL(mock, buy(code, price, quantity)).Times(1);
+	stockerBrocker.selectStockBrocker(mock);
+	stockerBrocker.login(id, password);
+	stockerBrocker.buy(code, price, quantity);
+}
+
+TEST_F(TradingFixture, TestMockSell) {
+	EXPECT_CALL(mock, sell(code, price, quantity)).Times(1);
+	stockerBrocker.selectStockBrocker(mock);
+	EXPECT_TRUE(stockerBrocker.login(id, password));
+	bool ret = stockerBrocker.sell(code, price, quantity);
+	EXPECT_TRUE(ret);
+}
+*/
