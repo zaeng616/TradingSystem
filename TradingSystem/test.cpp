@@ -11,6 +11,7 @@ public:
 	virtual void sell(std::string code, int price, int quantity) = 0;
 	virtual int getAvailableCash() = 0;
 	virtual void depositCash(int cash) = 0;
+	virtual int getAvailableShares(std::string code) = 0;
 };
 
 class MockDriver : public Driver {
@@ -21,6 +22,7 @@ public:
 	MOCK_METHOD(void, sell, (std::string code, int price, int quantity), (override));
 	MOCK_METHOD(int, getAvailableCash, (), (override));
 	MOCK_METHOD(void, depositCash, (int cash), (override));
+	MOCK_METHOD(int, getAvailableShares, (std::string code), (override));
 };
 
 class StockBrockerDriverInterface {
@@ -51,6 +53,10 @@ public:
 	}
 	bool sell(std::string code, int price, int quantity) {
 		CheckStockCode(code);
+		if (quantity > getAvailableShares(code)) {
+			throw InsufficientSharesException();
+			return false;
+		}
 		driver->sell(code, price, quantity);
 		return true;
 	}
@@ -60,7 +66,9 @@ public:
 	void depositCash(int cash) {
 		driver->depositCash(cash);
 	}
-
+	int getAvailableShares(std::string code) {
+		return driver->getAvailableShares(code);
+	}
 private:
 	Driver* driver = nullptr;
 
@@ -182,11 +190,27 @@ TEST_F(TradingFixture, TestMockBuySuccess) {
 	stockerBrocker.buy(code, price, quantity);
 }
 
-TEST_F(TradingFixture, TestMockSell) {
-	EXPECT_CALL(mock, sell(code, price, quantity)).Times(1);
+TEST_F(TradingFixture, TestMockSellFail) {
+	EXPECT_CALL(mock, sell(code, price, quantity)).Times(0);
+	EXPECT_CALL(mock, getAvailableShares(code)).WillRepeatedly(testing::Return(0));
 	EXPECT_CALL(mock, login(id, password)).WillRepeatedly(Return(true));
 	stockerBrocker.selectStockBrocker(mock);
 
-	bool ret = stockerBrocker.sell(code, price, quantity);
-	EXPECT_TRUE(ret);
+	EXPECT_TRUE(stockerBrocker.login(id, password));
+	try {
+		stockerBrocker.sell(code, price, quantity);
+		FAIL();
+	}
+	catch (InsufficientSharesException& e) {}
+}
+
+TEST_F(TradingFixture, TestMockSellSuccess) {
+	EXPECT_CALL(mock, sell(code, price, quantity)).Times(1);
+	EXPECT_CALL(mock, getAvailableShares(code)).WillRepeatedly(testing::Return(100));
+	EXPECT_CALL(mock, login(id, password)).WillRepeatedly(Return(true));
+	stockerBrocker.selectStockBrocker(mock);
+	EXPECT_TRUE(stockerBrocker.login(id, password));
+	stockerBrocker.sell(code, price, quantity);
+	int ret = stockerBrocker.getAvailableShares(code);
+	EXPECT_EQ(ret, 100);
 }
