@@ -33,3 +33,11 @@ TEST_F(TradingFixture, TestMockBuy) {
 	EXPECT_TRUE(stockerBrocker.login(id, password));
 	stockerBrocker.buy(code, price, quantity);
 }
+
+TEST_F(TradingFixture, TestMockSell) {
+	EXPECT_CALL(mock, sell(code, price, quantity)).Times(1);
+	stockerBrocker.selectStockBrocker(mock);
+	EXPECT_TRUE(stockerBrocker.login(id, password));
+	bool ret = stockerBrocker.sell(code, price, quantity);
+	EXPECT_TRUE(ret);
+}
