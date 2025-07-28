@@ -22,7 +22,7 @@ public:
 		return true;
 	}
 	bool sell(std::string code, int price, int quantity) {
-
+		driver->sell(code, price, quantity);
 		return true;
 	}
 private:
