@@ -108,10 +108,24 @@ TEST_F(TradingFixture, TestMockBuySuccess) {
 	stockerBrocker.buy(code, price, quantity);
 }
 
-TEST_F(TradingFixture, TestMockSell) {
+TEST_F(TradingFixture, TestMockSellFail) {
 	EXPECT_CALL(mock, sell(code, price, quantity)).Times(1);
+	EXPECT_CALL(mock, getAvailableShares(code)).WillRepeatedly(testing::Return(0));
 	stockerBrocker.selectStockBrocker(mock);
 	EXPECT_TRUE(stockerBrocker.login(id, password));
-	bool ret = stockerBrocker.sell(code, price, quantity);
-	EXPECT_TRUE(ret);
+	try {
+		stockerBrocker.sell(code, price, quantity);
+		FAIL();
+	}
+	catch (InsufficientSharesException& e) {}
+}
+
+TEST_F(TradingFixture, TestMockSellSuccess) {
+	EXPECT_CALL(mock, sell(code, price, quantity)).Times(1);
+	EXPECT_CALL(mock, getAvailableShares(code)).WillRepeatedly(testing::Return(100));
+	stockerBrocker.selectStockBrocker(mock);
+	EXPECT_TRUE(stockerBrocker.login(id, password));
+	stockerBrocker.sell(code, price, quantity);
+	int ret = stockerBrocker.getAvailableShares(code);
+	EXPECT_EQ(ret, 100);
 }
