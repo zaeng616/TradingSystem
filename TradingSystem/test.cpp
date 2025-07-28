@@ -48,6 +48,14 @@ public:
 
 };
 
+TEST_F(TradingFixture, TestNotSelectDriver) {
+	try {
+		stockerBrocker.login(id, password);
+		FAIL();
+	}
+	catch (UnknownDriverException& e) {}
+}
+
 TEST_F(TradingFixture, TestMockLogin) {
 	EXPECT_CALL(mock, login(id, password)).Times(1);
 	stockerBrocker.selectStockBrocker(mock);
