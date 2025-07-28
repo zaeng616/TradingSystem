@@ -126,7 +126,9 @@
     <ClCompile Include="auto_trading_system.cpp" />
     <ClCompile Include="custom_exception.cpp" />
     <ClCompile Include="driver.cpp" />
+    <ClCompile Include="kiwer_api.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="nemo_api.cpp" />
     <ClCompile Include="test.cpp">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">  %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">  %(AdditionalOptions)</AdditionalOptions>
