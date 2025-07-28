@@ -129,3 +129,31 @@ TEST_F(TradingFixture, TestMockSellSuccess) {
 	int ret = stockerBrocker.getAvailableShares(code);
 	EXPECT_EQ(ret, 100);
 }
+
+TEST_F(TradingFixture, TestBuyNiceTiming) {
+	int cash = 1000000;
+	EXPECT_CALL(mock, getAvailableCash())
+		.WillRepeatedly(testing::Return(cash));
+	EXPECT_CALL(mock, getPrice(code))
+		.WillOnce(testing::Return(9000))
+		.WillOnce(testing::Return(9500))
+		.WillOnce(testing::Return(10000));
+	EXPECT_CALL(mock, buy(code, 10000, 100)).Times(1);
+	stockerBrocker.selectStockBrocker(mock);
+	stockerBrocker.login(id, password);
+	stockerBrocker.buyNiceTiming(code, cash);
+}
+
+TEST_F(TradingFixture, TestBuyNiceTiming2) {
+	int cash = 1000000;
+	EXPECT_CALL(mock, getAvailableCash())
+		.WillRepeatedly(testing::Return(cash));
+	EXPECT_CALL(mock, getPrice(code))
+		.WillOnce(testing::Return(10000))
+		.WillOnce(testing::Return(9500))
+		.WillOnce(testing::Return(9000));
+	EXPECT_CALL(mock, buy(code, 10000, 100)).Times(0);
+	stockerBrocker.selectStockBrocker(mock);
+	stockerBrocker.login(id, password);
+	stockerBrocker.buyNiceTiming(code, cash);
+}
