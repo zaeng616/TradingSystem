@@ -21,13 +21,13 @@ public:
 		CheckStockCode(code);
 		return driver->getPrice(code);
 	}
-	bool buy(std::string code, int price, int count) {
+	bool buy(std::string code, int price, int quantity) {
 		CheckStockCode(code);
 		if (driver->getAvailableCash() < price) {
 			throw InsufficientBalanceException();
 		}
 
-		driver->buy(code, price, count);
+		driver->buy(code, price, quantity);
 		return true;
 	}
 	bool sell(std::string code, int price, int quantity) {
