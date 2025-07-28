@@ -27,7 +27,7 @@ public:
 		return true;
 	}
 	int getPrice(std::string code) {
-		return 10000;
+		return driver->getPrice(code);
 	}
 	bool buy(std::string stockPrice, int count, int price) {
 		driver->buy(stockPrice, count, price);
