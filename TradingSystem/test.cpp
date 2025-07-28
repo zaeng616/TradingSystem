@@ -85,6 +85,21 @@ public:
 	int quantity = 100;
 };
 
+TEST_F(TradingFixture, TestNotSelectDriver) {
+	try {
+		stockerBrocker.login(id, password);
+		FAIL();
+	}
+	catch (const UnknownDriverException& e) {}
+}
+
+TEST_F(TradingFixture, TestMockLoginFail) {
+	EXPECT_CALL(mock, login(UNKNOWN, password)).WillRepeatedly(testing::Return(false));
+	stockerBrocker.selectStockBrocker(mock);
+	bool ret = stockerBrocker.login(UNKNOWN, password);
+	EXPECT_FALSE(ret);
+}
+
 TEST_F(TradingFixture, TestMockLogin) {
 	EXPECT_CALL(mock, login(id, password))
 		.Times(1)
