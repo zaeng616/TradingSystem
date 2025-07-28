@@ -54,18 +54,17 @@ public:
 		driver->depositCash(cash);
 	}
 	bool buyNiceTiming(std::string code, int totalPrice) {
-		int price = driver->getPrice(code);
+		int price1 = getPrice(code);
 
-		// repeat 2 more times
-		for (int i = 0; i < 2; i++) {
-			Sleep(200);
-			int newPrice = driver->getPrice(code);
-			if (newPrice <= price) return false;
+		Sleep(200);
+		int price2 = getPrice(code);
 
-			price = newPrice;
-		}
+		Sleep(200);
+		int price3 = getPrice(code);
 
-		return buy(code, totalPrice / price, price);
+		if (price2 <= price1 || price3 <= price2) return false;
+
+		return buy(code, price3, totalPrice / price3);
 	}
 
 private:
@@ -187,7 +186,7 @@ TEST_F(TradingFixture, TestBuyNiceTiming) {
 		.WillOnce(testing::Return(10000));
 	EXPECT_CALL(mock, buy(code, 10000, 100)).Times(1);
 	stockerBrocker.selectStockBrocker(mock);
-	stockerBrocker.login(id, password);
+	//stockerBrocker.login(id, password);
 	stockerBrocker.buyNiceTiming(code, cash);
 }
 
@@ -201,6 +200,6 @@ TEST_F(TradingFixture, TestBuyNiceTiming2) {
 		.WillOnce(testing::Return(9000));
 	EXPECT_CALL(mock, buy(code, 10000, 100)).Times(0);
 	stockerBrocker.selectStockBrocker(mock);
-	stockerBrocker.login(id, password);
+	//stockerBrocker.login(id, password);
 	stockerBrocker.buyNiceTiming(code, cash);
 }
