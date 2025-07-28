@@ -94,6 +94,7 @@ TEST_F(TradingFixture, TestMockGetPrice) {
 }
 
 TEST_F(TradingFixture, TestMockUnknownStockCode1) {
+	EXPECT_CALL(mock, getPrice(UNKNOWN)).WillRepeatedly(testing::Throw(UnknownCodeException()));
 	stockerBrocker.selectStockBrocker(mock);
 	stockerBrocker.login(id, password);
 	try {
@@ -103,6 +104,7 @@ TEST_F(TradingFixture, TestMockUnknownStockCode1) {
 	catch (UnknownCodeException& e) {}
 }
 TEST_F(TradingFixture, TestMockUnknownStockCode2) {
+	EXPECT_CALL(mock, buy(UNKNOWN, testing::_, testing::_)).WillRepeatedly(testing::Throw(UnknownCodeException()));
 	stockerBrocker.selectStockBrocker(mock);
 	stockerBrocker.login(id, password);
 	try {
@@ -113,6 +115,7 @@ TEST_F(TradingFixture, TestMockUnknownStockCode2) {
 }
 
 TEST_F(TradingFixture, TestMockUnknownStockCode3) {
+	EXPECT_CALL(mock, sell(UNKNOWN, testing::_, testing::_)).WillRepeatedly(testing::Throw(UnknownCodeException()));
 	stockerBrocker.selectStockBrocker(mock);
 	stockerBrocker.login(id, password);
 	try {
