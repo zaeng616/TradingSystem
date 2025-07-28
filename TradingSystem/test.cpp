@@ -54,6 +54,10 @@ public:
 	}
 	bool sell(std::string code, int price, int quantity) {
 		CheckStockCode(code);
+		if (quantity > getAvailableShares(code)) {
+			throw InsufficientSharesException();
+			return false;
+		}
 		driver->sell(code, price, quantity);
 		return true;
 	}
@@ -62,6 +66,22 @@ public:
 	}
 	void depositCash(int cash) {
 		driver->depositCash(cash);
+	}
+	int getAvailableShares(std::string code) {
+		return driver->getAvailableShares(code);
+	}
+	bool buyNiceTiming(std::string code, int totalPrice) {
+		int price1 = getPrice(code);
+
+		Sleep(200);
+		int price2 = getPrice(code);
+
+		Sleep(200);
+		int price3 = getPrice(code);
+
+		if (price2 <= price1 || price3 <= price2) return false;
+
+		return buy(code, price3, totalPrice / price3);
 	}
 	bool sellNiceTiming(std::string code, int quantity) {
 		int price1 = getPrice(code);
@@ -197,13 +217,57 @@ TEST_F(TradingFixture, TestMockBuySuccess) {
 	stockerBrocker.buy(code, price, quantity);
 }
 
-TEST_F(TradingFixture, TestMockSell) {
-	EXPECT_CALL(mock, sell(code, price, quantity)).Times(1);
+TEST_F(TradingFixture, TestMockSellFail) {
+	EXPECT_CALL(mock, sell(code, price, quantity)).Times(0);
+	EXPECT_CALL(mock, getAvailableShares(code)).WillRepeatedly(testing::Return(0));
 	EXPECT_CALL(mock, login(id, password)).WillRepeatedly(Return(true));
 	stockerBrocker.selectStockBrocker(mock);
 
-	bool ret = stockerBrocker.sell(code, price, quantity);
-	EXPECT_TRUE(ret);
+	EXPECT_TRUE(stockerBrocker.login(id, password));
+	try {
+		stockerBrocker.sell(code, price, quantity);
+		FAIL();
+	}
+	catch (InsufficientSharesException& e) {}
+}
+
+TEST_F(TradingFixture, TestMockSellSuccess) {
+	EXPECT_CALL(mock, sell(code, price, quantity)).Times(1);
+	EXPECT_CALL(mock, getAvailableShares(code)).WillRepeatedly(testing::Return(100));
+	EXPECT_CALL(mock, login(id, password)).WillRepeatedly(Return(true));
+	stockerBrocker.selectStockBrocker(mock);
+	EXPECT_TRUE(stockerBrocker.login(id, password));
+	stockerBrocker.sell(code, price, quantity);
+	int ret = stockerBrocker.getAvailableShares(code);
+	EXPECT_EQ(ret, 100);
+}
+
+TEST_F(TradingFixture, TestBuyNiceTiming) {
+	int cash = 1000000;
+	EXPECT_CALL(mock, getAvailableCash())
+		.WillRepeatedly(testing::Return(cash));
+	EXPECT_CALL(mock, getPrice(code))
+		.WillOnce(testing::Return(9000))
+		.WillOnce(testing::Return(9500))
+		.WillOnce(testing::Return(10000));
+	EXPECT_CALL(mock, buy(code, 10000, 100)).Times(1);
+	stockerBrocker.selectStockBrocker(mock);
+	//stockerBrocker.login(id, password);
+	stockerBrocker.buyNiceTiming(code, cash);
+}
+
+TEST_F(TradingFixture, TestBuyNiceTiming2) {
+	int cash = 1000000;
+	EXPECT_CALL(mock, getAvailableCash())
+		.WillRepeatedly(testing::Return(cash));
+	EXPECT_CALL(mock, getPrice(code))
+		.WillOnce(testing::Return(10000))
+		.WillOnce(testing::Return(9500))
+		.WillOnce(testing::Return(9000));
+	EXPECT_CALL(mock, buy(code, 10000, 100)).Times(0);
+	stockerBrocker.selectStockBrocker(mock);
+	//stockerBrocker.login(id, password);
+	stockerBrocker.buyNiceTiming(code, cash);
 }
 
 TEST_F(TradingFixture, TestSellNiceTiming) {
