@@ -1,12 +1,11 @@
 ﻿#include "gmock/gmock.h"
 
-using namespace testing;
-
 class Driver {
 public:
 	virtual void login(std::string ID, std::string pass) = 0;
 	virtual int getPrice(std::string code) = 0;
 	virtual void buy(std::string stockPrice, int count, int price) = 0;
+	virtual void sell(std::string code, int price, int quantity) = 0;
 };
 
 class MockDriver : public Driver {
@@ -14,6 +13,7 @@ public:
 	MOCK_METHOD(void, login, (std::string ID, std::string pass), (override));
 	MOCK_METHOD(int, getPrice, (std::string code), (override));
 	MOCK_METHOD(void, buy, (std::string stockPrice, int count, int price), (override));
+	MOCK_METHOD(void, sell, (std::string code, int price, int quantity), (override));
 };
 
 class StockerBrockerDriverInterface {
@@ -30,6 +30,10 @@ public:
 	}
 	bool buy(std::string stockPrice, int count, int price) {
 		driver->buy(stockPrice, count, price);
+		return true;
+	}
+	bool sell(std::string code, int price, int quantity) {
+		driver->sell(code, price, quantity);
 		return true;
 	}
 private:
@@ -114,4 +118,12 @@ TEST_F(TradingFixture, TestMockBuy) {
 	stockerBrocker.selectStockBrocker(mock);
 	EXPECT_TRUE(stockerBrocker.login(id, password));
 	stockerBrocker.buy(code, price, quantity);
+}
+
+TEST_F(TradingFixture, TestMockSell) {
+	EXPECT_CALL(mock, sell(code, price, quantity)).Times(1);
+	stockerBrocker.selectStockBrocker(mock);
+	EXPECT_TRUE(stockerBrocker.login(id, password));
+	bool ret = stockerBrocker.sell(code, price, quantity);
+	EXPECT_TRUE(ret);
 }
