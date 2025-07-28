@@ -8,3 +8,9 @@ public:
 		return "No driver selected!";
 	}
 };
+class InsufficientSharesException : public std::exception {
+	char const* what() const override
+	{
+		return "You don't have enough shares!";
+	}
+};
