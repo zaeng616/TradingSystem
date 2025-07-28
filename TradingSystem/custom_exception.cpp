@@ -17,3 +17,20 @@ public:
 		return "Invalid StockCode selected!";
 	}
 };
+
+class InsufficientSharesException : public std::exception
+{
+	char const* what() const override
+	{
+		return "You don't have enough shares!";
+	}
+};
+
+class InsufficientBalanceException : public std::exception
+{
+public:
+	char const* what() const override
+	{
+		return "Insufficient Balance!";
+	}
+};
