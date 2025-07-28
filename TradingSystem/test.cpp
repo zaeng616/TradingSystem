@@ -28,3 +28,17 @@ TEST(TradingSystemTest, TestMockGetPrice) {
 	EXPECT_EQ(ret, 10000);
 }
 
+
+TEST(TradingSystemTest, TestMockBuy) {
+	MockDriver mock;
+	StockerBrockerDriverInterface stockerBrocker;
+	std::string id = "id1234";
+	std::string password = "password56";
+	int code = 987654;
+	int price = 10000;
+	int quantity = 100;
+	EXPECT_CALL(mock, buy(code, price, quantity)).Times(1);
+	stockerBrocker.selectStockBrocker(mock);
+	EXPECT_TRUE(stockerBrocker.login(id, password));
+	stockerBrocker.buy(code, price, quantity);
+}
